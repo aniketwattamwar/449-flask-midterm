@@ -10,7 +10,7 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 conn = pymysql.connect(
         host='localhost',
         user='root', 
-        password = "adminadmin",
+        password = "root",
         db='449_db',
 		cursorclass=pymysql.cursors.DictCursor
         )
@@ -24,11 +24,10 @@ def home():
 @app.route('/upload' , methods =['GET', 'POST'])
 def upload():
     
-    if request.method == 'POST':
-        filename = request.form.get('filename')
-        print(filename)
+    fs = request.files.get('myFile')
+    print(fs.filename)
 
-    return request
+    return "File Uploaded"
 
 
 
