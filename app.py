@@ -28,98 +28,29 @@ conn = pymysql.connect(
 		cursorclass=pymysql.cursors.DictCursor
         )
 cur = conn.cursor()
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SECRET_KEY'] = 'super-secret'
 
-#cur.execute("CREATE TABLE `449_db`.`users`(`id` INT NOT NULL, `username` VARCHAR(100) NULL, `password` VARCHAR(20) NULL, `email` VARCHAR(45) NULL, `organisation` VARCHAR(100) NULL, `address` VARCHAR(100) NULL, PRIMARY KEY (`id`)")        
+jwt = JWTManager(app)
 
-@app.route('/login', methods = ['GET','POST'])
+@app.route("/login", methods=["POST"])
 def login():
-    return render_template('login.html')
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+    if username != "aniket" or password != "aniket":
+        return jsonify({"msg": "Bad username or password"}), 401
 
-@app.route('/register', methods = ['GET','POST'])
-def register():
-    msg = ''
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        email = request.form["email"]
-        organisation = request.form["organisation"]
-        address = request.form["address"]
-        cur.execute('SELECT * FROM users WHERE username = % s', (username, ))
-        record = cur.fetchone()
-        if record:
-            msg = 'already registered'
-        else:
-            cur.execute('INSERT INTO users VALUES (NULL, %s, %s, %s, %s, %s)', (username, password, email, organisation, address,))
-            conn.commit()
-            msg = 'successfull registration'
-    return render_template('register.html')
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token)
 
-@app.route('/update', methods = ['GET','POST'])
-def update():
-    msg = ''
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form and 'address' in request.form and 'city' in request.form and 'country' in request.form and 'postalcode' in request.form and 'organisation' in request.form:
-                username = request.form['username']
-                password = request.form['password']
-                email = request.form['email']
-                organisation = request.form['organisation']
-                address = request.form['address']
-                cur.execute('SELECT * FROM users WHERE username = % s', (username, ))
-                record = cur.fetchone()
-                if record:
-                    msg = 'Record already exists!'
-                else:
-                    cur.execute("UPDATE users SET username = %s, password = %s, email = %s, organisation = %s, address = %s WHERE username = % s", (username, password, email, organisation, address))
-                    conn.commit()
-                    msg = 'updated'
-    elif request.method == 'POST':
-        msg = 'Please fill out the form !'
-    return render_template('update.html')
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
-#cur.execute("CREATE TABLE `449_db`.`users`(`id` INT NOT NULL, `username` VARCHAR(100) NULL, `password` VARCHAR(20) NULL, `email` VARCHAR(45) NULL, `organisation` VARCHAR(100) NULL, `address` VARCHAR(100) NULL, PRIMARY KEY (`id`)")        
 
-@app.route('/login', methods = ['GET','POST'])
-def login():
-    return render_template('login.html')
-
-@app.route('/register', methods = ['GET','POST'])
-def register():
-    msg = ''
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        email = request.form["email"]
-        organisation = request.form["organisation"]
-        address = request.form["address"]
-        cur.execute('SELECT * FROM users WHERE username = % s', (username, ))
-        record = cur.fetchone()
-        if record:
-            msg = 'already registered'
-        else:
-            cur.execute('INSERT INTO users VALUES (NULL, %s, %s, %s, %s, %s)', (username, password, email, organisation, address,))
-            conn.commit()
-            msg = 'successfull registration'
-    return render_template('register.html')
-
-@app.route('/update', methods = ['GET','POST'])
-def update():
-    msg = ''
-    if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form and 'address' in request.form and 'city' in request.form and 'country' in request.form and 'postalcode' in request.form and 'organisation' in request.form:
-                username = request.form['username']
-                password = request.form['password']
-                email = request.form['email']
-                organisation = request.form['organisation']
-                address = request.form['address']
-                cur.execute('SELECT * FROM users WHERE username = % s', (username, ))
-                record = cur.fetchone()
-                if record:
-                    msg = 'Record already exists!'
-                else:
-                    cur.execute("UPDATE users SET username = %s, password = %s, email = %s, organisation = %s, address = %s WHERE username = % s", (username, password, email, organisation, address))
-                    conn.commit()
-                    msg = 'updated'
-    elif request.method == 'POST':
-        msg = 'Please fill out the form !'
-    return render_template('update.html')
 
 @app.route('/')  
 def home():
