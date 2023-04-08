@@ -4,6 +4,7 @@ import pymysql
 import re
 from flask_cors import CORS
 import os
+import jwt
 app = Flask(__name__)
 
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
@@ -14,7 +15,7 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 
-UPLOAD_FOLDER = 'C:/Users/aniket.wattamwar/Documents/RA/'
+UPLOAD_FOLDER = 'C:/Users/Sanket/MS Subject/449 Backend/449-flask-midterm'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 # ALLOWED_FILESIZES = {}
 
@@ -23,7 +24,7 @@ ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 conn = pymysql.connect(
         host='localhost',
         user='root', 
-        password = "adminadmin",
+        password = "root",
         db='449_db',
 		cursorclass=pymysql.cursors.DictCursor
         )
@@ -31,7 +32,7 @@ cur = conn.cursor()
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SECRET_KEY'] = 'super-secret'
 
-jwt = JWTManager(app)
+jwt2 = JWTManager(app)
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -40,15 +41,19 @@ def login():
     if username != "aniket" or password != "aniket":
         return jsonify({"msg": "Bad username or password"}), 401
 
-    access_token = create_access_token(identity=username)
+    #access_token = create_access_token(identity=username)
+    access_token = encode_token(username)
     return jsonify(access_token=access_token)
 
 @app.route("/protected", methods=["GET"])
-@jwt_required()
-def protected():
+def protected(): 
     # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    try:
+        token=request.headers.get('authorization')
+        user=decode_token(token)
+        return user
+    except:
+        return jsonify({"err":"DECODE ERROR"}),  401
 
 
 
@@ -77,8 +82,12 @@ def upload():
         
     return "File saved and uploaded"
 
+def encode_token(username):
+    return jwt.encode({"username":username},app.config['SECRET_KEY'],'HS256')
 
+def decode_token(jwt_token):
+    return jsonify(jwt.decode(jwt_token,app.config['SECRET_KEY'],algorithms=["HS256"])),200
+   
 
 if __name__ == "__main__":
-    
     app.run(debug=True)
