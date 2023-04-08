@@ -9,11 +9,6 @@ app = Flask(__name__)
 
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-
 
 UPLOAD_FOLDER = 'C:/Users/Sanket/MS Subject/449 Backend/449-flask-midterm'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
@@ -31,8 +26,6 @@ conn = pymysql.connect(
 cur = conn.cursor()
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SECRET_KEY'] = 'super-secret'
-
-jwt2 = JWTManager(app)
 
 @app.route("/login", methods=["POST"])
 def login():
