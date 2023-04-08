@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import json
 from werkzeug.utils import secure_filename 
 import pymysql
 import re
@@ -10,6 +11,11 @@ app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 
+
+UPLOAD_FOLDER = 'C:/Users/aniket.wattamwar/Documents/RA/'
+# ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png'}
+ALLOWED_FILESIZE = 5000000
 UPLOAD_FOLDER = 'C:/Users/Sanket/MS Subject/449 Backend/449-flask-midterm'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 # ALLOWED_FILESIZES = {}
@@ -41,13 +47,8 @@ def login():
 @app.route("/protected", methods=["GET"])
 def protected(): 
     # Access the identity of the current user with get_jwt_identity
-    try:
-        token=request.headers.get('authorization')
-        user=decode_token(token)
-        return user
-    except:
-        return jsonify({"err":"DECODE ERROR"}),  401
-
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 
 @app.route('/')  
@@ -64,16 +65,26 @@ def upload():
     
     fs = request.files['myFile']
     print(fs.filename)
-    # size = os.stat(fs).st_size
-    # print(size)
+
     if fs and allowed_file(fs.filename):
         filename = secure_filename(fs.filename)
-        print(filename)
-        
-        fs.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return "file saved"
+        fs.seek(0,2)
+        file_length = fs.tell()
+        print(file_length)
+        if file_length < ALLOWED_FILESIZE:
+            fs.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return "file saved since within the limit"
+        else:
+            return "too large file. Upload a smaller file."
         
     return "File saved and uploaded"
+
+@app.route('/public',methods=["POST","GET"])
+def public():
+    cur=conn.cursor()
+    cur.execute("SELECT * FROM students")
+    details = cur.fetchall()
+    return details
 
 def encode_token(username):
     return jwt.encode({"username":username},app.config['SECRET_KEY'],'HS256')
