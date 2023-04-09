@@ -16,16 +16,14 @@ UPLOAD_FOLDER = 'C:/Users/aniket.wattamwar/Documents/RA/'
 # ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png'}
 ALLOWED_FILESIZE = 5000000
-UPLOAD_FOLDER = 'C:/Users/Sanket/MS Subject/449 Backend/449-flask-midterm'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
-# ALLOWED_FILESIZES = {}
+
 
 
 
 conn = pymysql.connect(
         host='localhost',
         user='root', 
-        password = "root",
+        password = "adminadmin",
         db='449_db',
 		cursorclass=pymysql.cursors.DictCursor
         )
@@ -63,14 +61,15 @@ def allowed_file(filename):
 @app.route('/upload' , methods =['GET', 'POST'])
 def upload():
     
+  
     fs = request.files['myFile']
-    print(fs.filename)
-
+   
     if fs and allowed_file(fs.filename):
         filename = secure_filename(fs.filename)
         fs.seek(0,2)
         file_length = fs.tell()
         print(file_length)
+        fs.seek(0)
         if file_length < ALLOWED_FILESIZE:
             fs.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return "file saved since within the limit"
